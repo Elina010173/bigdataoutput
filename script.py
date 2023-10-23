@@ -2,7 +2,7 @@ import csv
 import json
 
 # Replace these paths with the paths to your CSV and JSON files
-csv_file_path = 'input.csv'  # Path to the CSV file
+csv_file_path = 'c:\Users\User\Downloads\HM_data_2015-12-18 10_42_00.csv'  # Path to the CSV file
 json_file_path = 'output.json'  # Path to the JSON file to save the serialized data
 
 data = []  # Create an empty list to store the serialized objects

@@ -1,75 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Загрузка и экспорт CSV в Google Sheets</title>
+    <title>Загрузка и вывод данных в Excel</title>
 </head>
 <body>
-    <h1>Загрузка и экспорт CSV в Google Sheets</h1>
-    <form id="csv-form">
-        <input type="file" id="csv-file" accept=".csv">
-        
-    </form>
-    <div id="csv-data">
-        <!-- Здесь будет отображаться содержимое CSV файла -->
-    </div>
-
-    <button type="button" id="export-button">Экспортировать в Google Sheets</button>
-
-    <script src="https://apis.google.com/js/client.js"></script>
+    <h1>Загрузка и вывод данных в Excel</h1>
+    
+    <!-- Кнопка для загрузки CSV файла -->
+    <input type="file" id="csvFileInput1" accept=".csv">
+    <button id="analyzeButton1">Загрузить CSV 1</button>
+    
+    <!-- Кнопка для открытия в Excel -->
+    <button id="openInExcel">Открыть в Excel</button>
+    
+    <!-- Элемент для вывода данных -->
+    <div id="output1"></div>
+    
     <script>
-        var CLIENT_ID = 'YOUR_CLIENT_ID'; // Замените на ваш собственный client_id
-        var API_KEY = 'AIzaSyAOdeKx9oeQ_7RQN7bqccuv883dLHFZCTY'; // Замените на ваш собственный API ключ
-        var SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Замените на идентификатор вашей таблицы Google Sheets
+        function handleFileInput(inputId, outputId) {
+            var input = document.getElementById(inputId);
+            var output = document.getElementById(outputId);
 
-        function handleClientLoad() {
-            gapi.load('client:auth2', initClient);
-        }
+            input.addEventListener('change', function () {
+                var file = input.files[0];
+                var reader = new FileReader();
 
-        function initClient() {
-            gapi.client.init({
-                apiKey: API_KEY,
-                clientId: CLIENT_ID,
-                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-                scope: "https://www.googleapis.com/auth/spreadsheets"
-            }).then(function () {
-                // Обработчик авторизации
-                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
-                updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+                reader.onload = function (e) {
+                    // Выводим данные из CSV на веб-страницу
+                    output.textContent = e.target.result;
+                };
 
-                // Обработчик нажатия на кнопку экспорта
-                document.getElementById("export-button").addEventListener("click", exportToGoogleSheets);
+                reader.readAsText(file);
             });
         }
 
-        function updateSignInStatus(isSignedIn) {
-            // Обновите интерфейс, чтобы отразить статус авторизации
-            if (isSignedIn) {
-                document.getElementById("export-button").disabled = false;
-            } else {
-                document.getElementById("export-button").disabled = true;
-            }
-        }
+        // Обработка первой кнопки и вывод данных для первого CSV файла
+        handleFileInput('csvFileInput1', 'output1');
+        
+        // Обработка кнопки "Открыть в Excel"
+        document.getElementById('openInExcel').addEventListener('click', function () {
+            // Создаем Blob с данными CSV
+            var csvData = document.getElementById('output1').textContent;
+            var blob = new Blob([csvData], { type: 'text/csv' });
 
-        function exportToGoogleSheets() {
-            var csvContent = document.getElementById("csv-data").textContent;
-            var values = csvContent.split('\n').map(function(row) {
-                return row.split(',');
-            });
+            // Создаем объект URL для Blob
+            var blobUrl = URL.createObjectURL(blob);
 
-            gapi.client.sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID,
-                range: 'A1', // место куда будет вставлен ваш CSV файл
-                valueInputOption: 'RAW',
-                insertDataOption: 'INSERT_ROWS',
-                values: values
-            }).then(function(response) {
-                console.log('Данные успешно экспортированы в Google Sheets');
-            }, function(error) {
-                console.error('Ошибка экспорта данных: ' + error.result.error.message);
-            });
-        }
+            // Создаем ссылку на Blob URL для открытия в Excel
+            var link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'output.csv'; // Имя файла при скачивании
+            link.click();
+        });
     </script>
-
-    <script src="https://apis.google.com/js/api.js?onload=handleClientLoad"></script>
 </body>
 </html>
