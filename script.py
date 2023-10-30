@@ -1,30 +1,41 @@
 import csv
-import json
+from datetime import datetime
 
-# Replace these paths with the paths to your CSV and JSON files
-csv_file_path = 'c:\Users\User\Downloads\HM_data_2015-12-18 10_42_00.csv'  # Path to the CSV file
-json_file_path = 'output.json'  # Path to the JSON file to save the serialized data
+# Создайте словарь для хранения суммы температур и количества измерений для каждого дня
+daily_temperatures = {}
 
-data = []  # Create an empty list to store the serialized objects
+# Открываем CSV файл для чтения
+with open('HM_data_2013-12-18 10_42_00.csv', newline='') as csvfile:
+    reader = csv.DictReader(csvfile)
 
-# Open the CSV file and read its contents
-with open(csv_file_path, 'r', encoding='utf-8') as csv_file:
-    csv_reader = csv.DictReader(csv_file)
-    
-    # Iterate through each row in the CSV and serialize it as a dictionary
-    for row in csv_reader:
-        # Assuming each row in the CSV represents an object, you can further customize this serialization process
-        # For example, you may want to convert specific fields to different data types or manipulate the data
-        serialized_object = {
-            'field1': row['Column1'],  # Replace 'Column1' with the actual column name
-            'field2': row['Column2'],  # Replace 'Column2' with the actual column name
-            # Add more fields as needed
-        }
-        
-        data.append(serialized_object)
+    for row in reader:
+        start_time_str = row['Start time']
+        value = float(row['Value'])
 
-# Serialize the list of objects to JSON
-with open(json_file_path, 'w', encoding='utf-8') as json_file:
-    json.dump(data, json_file, ensure_ascii=False, indent=4)
+        # Преобразовываем строку с временем в объект datetime
+        current_datetime = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S')
 
-print(f'Serialization completed. Data saved to {json_file_path}')
+        # Извлекаем дату из объекта datetime
+        current_date = current_datetime.date()
+
+        # Проверяем, есть ли уже запись для этой даты в словаре
+        if current_date in daily_temperatures:
+            daily_temperatures[current_date]['sum'] += value
+            daily_temperatures[current_date]['count'] += 1
+        else:
+            daily_temperatures[current_date] = {'sum': value, 'count': 1}
+
+# Открываем новый CSV файл для записи средних температур за каждый день
+with open('average_daily_temperatures.csv', 'w', newline='') as csvfile:
+    fieldnames = ['Date', 'Average Temperature']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    # Записываем заголовок
+    writer.writeheader()
+
+    # Записываем средние температуры за каждый день в новый файл
+    for date, data in daily_temperatures.items():
+        average_temperature = data['sum'] / data['count']
+        writer.writerow({'Date': date, 'Average Temperature': average_temperature})
+
+print("Средние температуры за каждый день были записаны в новый CSV файл 'average_daily_temperatures.csv'.")
